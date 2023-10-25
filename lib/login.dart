@@ -86,7 +86,7 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(height: 10.0), // Add this padding for the gap
+                SizedBox(height: 6.0), // Add this padding for the gap
                 Column(
                   children: [
                     Text(
