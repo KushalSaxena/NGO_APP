@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:major_ngo_app/helper/helper_methods.dart';
 import 'package:major_ngo_app/post.dart'; // Replace with the correct import path for your Post widget
+import 'package:major_ngo_app/user_profile.dart';
 import 'login.dart'; // Import your login page if it's in a different file
 
 class Home extends StatefulWidget {
@@ -19,13 +21,20 @@ class _HomeState extends State<Home> {
         'UserEmail': currentUser.email,
         'Message': textController.text,
         'TimeStamp': Timestamp.now(),
-        'Likes' : [],
+        'Likes': [],
       });
 
-      // Clear the text field and update the UI
+      // Clear the text field
       textController.clear();
-      setState(() {});
     }
+  }
+
+  void _openProfilePage() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ProfilePage(),
+      ),
+    );
   }
 
   @override
@@ -35,6 +44,10 @@ class _HomeState extends State<Home> {
       appBar: AppBar(
         title: Text("Home Page"),
         actions: <Widget>[
+          IconButton(
+            onPressed: _openProfilePage, // Open ProfilePage
+            icon: Icon(Icons.person),
+          ),
           IconButton(
             onPressed: () async {
               await FirebaseAuth.instance.signOut();
@@ -52,7 +65,7 @@ class _HomeState extends State<Home> {
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection("User Posts")
-                  .orderBy("TimeStamp", descending: false)
+                  .orderBy("TimeStamp", descending: true) // Changed to descending order
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
@@ -65,6 +78,7 @@ class _HomeState extends State<Home> {
                         user: post['UserEmail'],
                         postId: post.id,
                         likes: List<String>.from(post['Likes'] ?? []),
+                        time: formatDate(post["TimeStamp"]),
                       );
                     },
                   );

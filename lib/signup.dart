@@ -48,14 +48,24 @@ class _SignupPageState extends State<SignupPage> {
         ));
       }
     } catch (e) {
-      // Handle signup error (show an error message, etc.)
-      print("Signup Error: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Invalid credentials. Please try again."),
-          duration: Duration(seconds: 3),
-        ),
-      );
+      if (e is FirebaseAuthException && e.code == 'email-already-in-use') {
+        // Handle the case where the email is already in use
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("The email is already in use. Please try another."),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      } else {
+        // Handle other signup errors
+        print("Signup Error: $e");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Invalid credentials. Please try again."),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
