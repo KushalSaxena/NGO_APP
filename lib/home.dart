@@ -1,9 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:major_ngo_app/chat.dart';
 import 'package:major_ngo_app/helper/helper_methods.dart';
 import 'package:major_ngo_app/post.dart'; // Replace with the correct import path for your Post widget
-import 'package:major_ngo_app/user_profile.dart';
+import 'package:major_ngo_app/search.dart';
+import 'package:major_ngo_app/profile_page.dart';
+import 'about.dart';
 import 'login.dart'; // Import your login page if it's in a different file
 
 class Home extends StatefulWidget {
@@ -29,13 +32,7 @@ class _HomeState extends State<Home> {
     }
   }
 
-  void _openProfilePage() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => ProfilePage(),
-      ),
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -43,21 +40,78 @@ class _HomeState extends State<Home> {
       backgroundColor: Colors.grey[300],
       appBar: AppBar(
         title: Text("Home Page"),
-        actions: <Widget>[
-          IconButton(
-            onPressed: _openProfilePage, // Open ProfilePage
-            icon: Icon(Icons.person),
-          ),
-          IconButton(
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-              Navigator.of(context).pushReplacement(MaterialPageRoute(
-                builder: (context) => LoginPage(),
-              ));
-            },
-            icon: Icon(Icons.logout),
-          ),
-        ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.blue,
+              ),
+              child: Text(
+                'Menu',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.person),
+              title: Text('Profile'),
+              onTap: () {
+                // Navigate to about page
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => ProfilePage(),
+                ));
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.chat),
+              title: Text('Chat'),
+              onTap: () {
+                // Navigate to about page
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => ChatScreen(),
+                ));
+              },
+              // Add functionality to navigate to Chat page here
+            ),ListTile(
+              leading: Icon(Icons.chat),
+              title: Text('Search'),
+              onTap: () {
+                // Navigate to about page
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => SearchScreen(),
+                ));
+              },
+              // Add functionality to navigate to Chat page here
+            ),
+            ListTile(
+              leading: Icon(Icons.info),
+              title: Text('About'),
+              onTap: () {
+                // Navigate to about page
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => AboutPage(),
+                ));
+              },
+              // Add functionality to navigate to About page here
+            ),
+
+            ListTile(
+              leading: Icon(Icons.logout),
+              title: Text('Logout'),
+              onTap: () async {
+                await FirebaseAuth.instance.signOut();
+                Navigator.of(context).pushReplacement(MaterialPageRoute(
+                  builder: (context) => LoginPage(),
+                ));
+              },
+            ),
+          ],
+        ),
       ),
       body: Column(
         children: [

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'login.dart';
@@ -37,10 +38,17 @@ class _SignupPageState extends State<SignupPage> {
     }
 
     try {
+
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
+      FirebaseFirestore.instance.collection("Users")
+          .doc(userCredential.user!.email!)
+          .set({
+        'username': email.split('@')[0],
+        'bio':'Empty bio...'
+      });
       if (userCredential.user != null) {
         // Signup successful, navigate to the login page
         Navigator.of(context).pushReplacement(MaterialPageRoute(
