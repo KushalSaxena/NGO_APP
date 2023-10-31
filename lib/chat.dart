@@ -1,106 +1,95 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class ChatScreen extends StatefulWidget {
+class ChatPage extends StatefulWidget {
+  final String receiverId;
+
+  const ChatPage({required this.receiverId});
+
   @override
-  _ChatScreenState createState() => _ChatScreenState();
+  _ChatPageState createState() => _ChatPageState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
-  final List<ChatMessage> _messages = <ChatMessage>[];
-  final TextEditingController _textController = TextEditingController();
+class _ChatPageState extends State<ChatPage> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final TextEditingController _messageController = TextEditingController();
+  final User currentUser = FirebaseAuth.instance.currentUser!;
 
-  void _handleSubmitted(String text) {
-    _textController.clear();
-    ChatMessage message = ChatMessage(
-      text: text,
-    );
-    setState(() {
-      _messages.insert(0, message);
+  void _sendMessage(String content) async {
+    await _firestore.collection('messages').add({
+      'senderId': currentUser.uid,
+      'receiverId': widget.receiverId,
+      'content': content,
+      'timestamp': Timestamp.now(),
     });
-  }
-
-  Widget _buildTextComposer() {
-    return IconTheme(
-      data: IconThemeData(color: Colors.blue),
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 8.0),
-        child: Row(
-          children: [
-            Flexible(
-              child: TextField(
-                controller: _textController,
-                onSubmitted: _handleSubmitted,
-                decoration:
-                InputDecoration.collapsed(hintText: 'Send a message'),
-              ),
-            ),
-            IconButton(
-              icon: Icon(Icons.send),
-              onPressed: () => _handleSubmitted(_textController.text),
-            ),
-          ],
-        ),
-      ),
-    );
+    _messageController.clear();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Chat App'),
+        title: Text('Chat with ${widget.receiverId}'),
       ),
       body: Column(
         children: [
-          Flexible(
-            child: ListView.builder(
-              padding: EdgeInsets.all(8.0),
-              reverse: true,
-              itemBuilder: (_, int index) => _messages[index],
-              itemCount: _messages.length,
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: _firestore
+                  .collection('messages')
+                  .where('senderId', isEqualTo: currentUser.uid)
+                  .where('receiverId', isEqualTo: widget.receiverId)
+                  .orderBy('timestamp', descending: true)
+                  .snapshots(),
+              builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                if (!snapshot.hasData) {
+                  return Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+
+                List<DocumentSnapshot> messages = snapshot.data!.docs;
+
+                return ListView(
+                  reverse: true,
+                  children: messages
+                      .map((DocumentSnapshot message) => ListTile(
+                    title: Text(message['content']),
+                  ))
+                      .toList(),
+                );
+              },
+            ),
+
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _messageController,
+                    decoration: InputDecoration(
+                      hintText: 'Type a message...',
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.send),
+                  onPressed: () {
+                    if (_messageController.text.isNotEmpty) {
+                      _sendMessage(_messageController.text);
+                    }
+                  },
+                )
+              ],
             ),
           ),
-          Divider(height: 1.0),
-          _buildTextComposer(),
         ],
       ),
     );
   }
 }
 
-class ChatMessage extends StatelessWidget {
-  final String text;
-
-  ChatMessage({required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 10.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            margin: const EdgeInsets.only(right: 16.0),
-            child: CircleAvatar(
-              child: Text('User'),
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'User Name',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              Container(
-                margin: EdgeInsets.only(top: 5.0),
-                child: Text(text),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}

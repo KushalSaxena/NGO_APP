@@ -69,14 +69,13 @@ class _HomeState extends State<Home> {
             ),
             ListTile(
               leading: Icon(Icons.chat),
-              title: Text('Chat'),
+              title: Text('Chat with User'),
               onTap: () {
-                // Navigate to about page
+                // Assuming you have a way to get the receiver's ID, replace 'receiverUserId' with the actual ID
                 Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => ChatScreen(),
+                  builder: (context) => ChatPage(receiverId: 'receiverUserId'),
                 ));
               },
-              // Add functionality to navigate to Chat page here
             ),ListTile(
               leading: Icon(Icons.chat),
               title: Text('Search'),
