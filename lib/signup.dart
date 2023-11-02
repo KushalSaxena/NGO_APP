@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'login.dart';
@@ -20,10 +21,10 @@ class _SignupPageState extends State<SignupPage> {
     });
   }
 
-  // Function to handle signup
   Future<void> _handleSignup() async {
     final email = _emailController.text;
     final password = _passwordController.text;
+    final username = _userNameController.text;
 
     if (password.length < 6) {
       // Display an error message for a password that's too short
@@ -41,6 +42,13 @@ class _SignupPageState extends State<SignupPage> {
         email: email,
         password: password,
       );
+
+      await FirebaseFirestore.instance.collection("Users").doc(userCredential.user!.email!).set({
+        'username': username,
+        'bio': 'Empty bio...',
+        'profileImage': defaultProfileImageUrl, // Set default profile image URL
+      });
+
       if (userCredential.user != null) {
         // Signup successful, navigate to the login page
         Navigator.of(context).pushReplacement(MaterialPageRoute(
@@ -184,3 +192,5 @@ class _SignupPageState extends State<SignupPage> {
     );
   }
 }
+
+const String defaultProfileImageUrl = 'https://thepluginpeople.atlassian.net/wiki/aa-avatar/557058:3fbe1a47-28ff-4ca5-a1fc-60f24c53b89d';

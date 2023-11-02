@@ -1,12 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:major_ngo_app/PostOpportunityPage.dart';
+import 'package:major_ngo_app/Volunteer_Opportunities.dart';
 import 'package:major_ngo_app/chat.dart';
 import 'package:major_ngo_app/helper/helper_methods.dart';
 import 'package:major_ngo_app/post.dart'; // Replace with the correct import path for your Post widget
 import 'package:major_ngo_app/search.dart';
 import 'package:major_ngo_app/profile_page.dart';
 import 'about.dart';
+import 'chat_page.dart';
 import 'login.dart'; // Import your login page if it's in a different file
 
 class Home extends StatefulWidget {
@@ -73,16 +76,38 @@ class _HomeState extends State<Home> {
               onTap: () {
                 // Assuming you have a way to get the receiver's ID, replace 'receiverUserId' with the actual ID
                 Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => ChatPage(receiverId: 'receiverUserId'),
+                  builder: (context) => Chat(),
                 ));
               },
+
             ),ListTile(
+      leading: Icon(Icons.chat),
+      title: Text(' VolunteerOpportunities'),
+      onTap: () {
+        // Assuming you have a way to get the receiver's ID, replace 'receiverUserId' with the actual ID
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => VolunteerOpportunities(),
+        ));
+      },
+            ),
+            ListTile(
               leading: Icon(Icons.chat),
               title: Text('Search'),
               onTap: () {
                 // Navigate to about page
                 Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => SearchScreen(),
+                ));
+              },
+              // Add functionality to navigate to Chat page here
+            ),
+            ListTile(
+              leading: Icon(Icons.chat),
+              title: Text('PostOpportunityPage'),
+              onTap: () {
+                // Navigate to about page
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => PostOpportunityPage(),
                 ));
               },
               // Add functionality to navigate to Chat page here

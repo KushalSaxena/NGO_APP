@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:major_ngo_app/comments.dart';
 import 'package:major_ngo_app/helper/helper_methods.dart';
 import 'package:major_ngo_app/comment_button.dart';
-import 'package:major_ngo_app/like_button.dart'; // Make sure to replace with the correct import path for your LikeButton widget
+import 'package:major_ngo_app/like_button.dart';
 
 class Post extends StatefulWidget {
   final String message;
@@ -211,3 +211,4 @@ class _PostState extends State<Post> {
     );
   }
 }
+
