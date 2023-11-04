@@ -5,12 +5,12 @@ import 'package:major_ngo_app/PostOpportunityPage.dart';
 import 'package:major_ngo_app/Volunteer_Opportunities.dart';
 import 'package:major_ngo_app/chat.dart';
 import 'package:major_ngo_app/helper/helper_methods.dart';
-import 'package:major_ngo_app/post.dart'; // Replace with the correct import path for your Post widget
+import 'package:major_ngo_app/post.dart';
 import 'package:major_ngo_app/search.dart';
 import 'package:major_ngo_app/profile_page.dart';
 import 'about.dart';
 import 'chat_page.dart';
-import 'login.dart'; // Import your login page if it's in a different file
+import 'login.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -30,7 +30,7 @@ class _HomeState extends State<Home> {
         'Likes': [],
       });
 
-      // Clear the text field
+
       textController.clear();
     }
   }
@@ -74,7 +74,7 @@ class _HomeState extends State<Home> {
               leading: Icon(Icons.chat),
               title: Text('Chat with User'),
               onTap: () {
-                // Assuming you have a way to get the receiver's ID, replace 'receiverUserId' with the actual ID
+
                 Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => Chat(),
                 ));
@@ -84,7 +84,7 @@ class _HomeState extends State<Home> {
       leading: Icon(Icons.chat),
       title: Text(' VolunteerOpportunities'),
       onTap: () {
-        // Assuming you have a way to get the receiver's ID, replace 'receiverUserId' with the actual ID
+
         Navigator.of(context).push(MaterialPageRoute(
           builder: (context) => VolunteerOpportunities(),
         ));
@@ -99,7 +99,7 @@ class _HomeState extends State<Home> {
                   builder: (context) => SearchScreen(),
                 ));
               },
-              // Add functionality to navigate to Chat page here
+
             ),
             ListTile(
               leading: Icon(Icons.chat),
@@ -110,7 +110,7 @@ class _HomeState extends State<Home> {
                   builder: (context) => PostOpportunityPage(),
                 ));
               },
-              // Add functionality to navigate to Chat page here
+
             ),
             ListTile(
               leading: Icon(Icons.info),
@@ -121,7 +121,7 @@ class _HomeState extends State<Home> {
                   builder: (context) => AboutPage(),
                 ));
               },
-              // Add functionality to navigate to About page here
+
             ),
 
             ListTile(
@@ -143,7 +143,7 @@ class _HomeState extends State<Home> {
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection("User Posts")
-                  .orderBy("TimeStamp", descending: true) // Changed to descending order
+                  .orderBy("TimeStamp", descending: true)
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasData) {

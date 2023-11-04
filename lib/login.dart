@@ -23,7 +23,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    // Show a SnackBar for 3 seconds on app start
+
     Future.delayed(Duration(seconds: 3), () {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -47,7 +47,7 @@ class _LoginPageState extends State<LoginPage> {
       }
     } catch (e) {
       print("Login Error: $e");
-      // Show an error dialog when login fails
+
       showDialog(
         context: context,
         builder: (context) {
@@ -78,7 +78,7 @@ class _LoginPageState extends State<LoginPage> {
         decoration: BoxDecoration(
           image: DecorationImage(
             image: AssetImage("assets/bg2.jpg"),
-            fit: BoxFit.cover, // Make the background image cover the whole Container
+            fit: BoxFit.cover,
           ),
         ),
         child: Center(
@@ -86,7 +86,7 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(height: 6.0), // Add this padding for the gap
+                SizedBox(height: 6.0),
                 Column(
                   children: [
                     Text(

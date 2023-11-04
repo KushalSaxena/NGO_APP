@@ -5,21 +5,25 @@ class MyTextBox extends StatelessWidget {
   final String sectionName;
   final void Function()? onPressed;
 
+
   const MyTextBox({
     Key? key,
     required this.text,
     required this.sectionName,
     required this.onPressed,
+
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey[200],
+
+        color: Colors.grey[600],
         borderRadius: BorderRadius.circular(8),
       ),
       padding: const EdgeInsets.only(left: 15, bottom: 15),
+
       margin: EdgeInsets.only(left: 20, right: 20, top: 20),
       child: Column(
         children: [
@@ -27,14 +31,15 @@ class MyTextBox extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
+
                 sectionName,
-                style: TextStyle(color: Colors.grey[500]),
+                style: TextStyle(color: Colors.white),
               ),
               IconButton(
                 onPressed: onPressed,
                 icon: Icon(
                   Icons.settings,
-                  color: Colors.grey[500],
+                  color: Colors.white,
                 ),
               )
             ],
