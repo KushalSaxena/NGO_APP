@@ -10,6 +10,8 @@ class SignupPage extends StatefulWidget {
 
 class _SignupPageState extends State<SignupPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
   bool _obscureText = true;
   TextEditingController _emailController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
@@ -42,12 +44,20 @@ class _SignupPageState extends State<SignupPage> {
         email: email,
         password: password,
       );
+      final uid = userCredential.user?.uid;
+      // Store user's email and UID in Firestore collection 'Users'
+      _firestore.collection("Users").doc(userCredential.user!.uid).set({
+        'email': email,
+        'uid' : uid,
+      });
 
-      await FirebaseFirestore.instance.collection("Users").doc(userCredential.user!.email!).set({
+      // Create user profile in another Firestore collection
+      await _firestore.collection("UsersProfile").doc(userCredential.user!.email!).set({
         'username': username,
         'bio': 'Empty bio...',
         'profileImage': defaultProfileImageUrl, // Set default profile image URL
       });
+
 
       if (userCredential.user != null) {
         // Signup successful, navigate to the login page
@@ -56,23 +66,33 @@ class _SignupPageState extends State<SignupPage> {
         ));
       }
     } catch (e) {
-      if (e is FirebaseAuthException && e.code == 'email-already-in-use') {
-        // Handle the case where the email is already in use
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("The email is already in use. Please try another."),
-            duration: Duration(seconds: 3),
-          ),
-        );
-      } else {
-        // Handle other signup errors
-        print("Signup Error: $e");
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Invalid credentials. Please try again."),
-            duration: Duration(seconds: 3),
-          ),
-        );
+      if (e is FirebaseAuthException) {
+        if (e.code == 'email-already-in-use') {
+          // Handle the case where the email is already in use
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("The email is already in use. Please try another."),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        } else if (e.code == 'invalid-email') {
+          // Handle invalid email
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Invalid email format. Please enter a valid email."),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        } else {
+          // Handle other signup errors
+          print("Signup Error: $e");
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Invalid credentials. Please try again."),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
       }
     }
   }

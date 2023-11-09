@@ -11,6 +11,9 @@ import 'package:major_ngo_app/profile_page.dart';
 import 'about.dart';
 import 'chat_page.dart';
 import 'login.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
+import 'dart:io';
 
 class Home extends StatefulWidget {
   @override
@@ -20,21 +23,48 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   final currentUser = FirebaseAuth.instance.currentUser!;
   final textController = TextEditingController();
+  File? _selectedImage;
+  void postMessage() async {
+    if (textController.text.isNotEmpty || _selectedImage != null) {
+      String? imageUrl;
+      if (_selectedImage != null) {
+        imageUrl = await _uploadImage(_selectedImage!);
+      }
 
-  void postMessage() {
-    if (textController.text.isNotEmpty) {
       FirebaseFirestore.instance.collection("User Posts").add({
         'UserEmail': currentUser.email,
         'Message': textController.text,
+        'ImageURL': imageUrl,
         'TimeStamp': Timestamp.now(),
         'Likes': [],
       });
 
-
       textController.clear();
+      setState(() {
+        _selectedImage = null;
+      });
     }
   }
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
+    if (pickedFile != null) {
+      setState(() {
+        _selectedImage = File(pickedFile.path);
+      });
+    }
+  }
+  Future<String?> _uploadImage(File image) async {
+    final fileName = "${currentUser.email!}_${DateTime.now().millisecondsSinceEpoch}_post_image";
+    final ref = firebase_storage.FirebaseStorage.instance
+        .ref()
+        .child('post_images/$fileName.jpg');
+    await ref.putFile(image);
+    final downloadUrl = await ref.getDownloadURL();
+
+    return downloadUrl;
+  }
 
 
   @override
@@ -96,7 +126,7 @@ class _HomeState extends State<Home> {
               onTap: () {
                 // Navigate to about page
                 Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => SearchScreen(),
+                  builder: (context) => Search(),
                 ));
               },
 
@@ -157,6 +187,7 @@ class _HomeState extends State<Home> {
                         postId: post.id,
                         likes: List<String>.from(post['Likes'] ?? []),
                         time: formatDate(post["TimeStamp"]),
+                        imageUrl: post['ImageURL'], // Pass the image URL
                       );
                     },
                   );
@@ -171,7 +202,6 @@ class _HomeState extends State<Home> {
               },
             ),
           ),
-          // Post message
           Padding(
             padding: const EdgeInsets.all(25.0),
             child: Row(
@@ -189,10 +219,13 @@ class _HomeState extends State<Home> {
                   onPressed: postMessage,
                   icon: Icon(Icons.arrow_circle_up),
                 ),
+                IconButton(
+                  onPressed: _pickImage,
+                  icon: Icon(Icons.image),
+                ),
               ],
             ),
           ),
-          // Logged in as
           Text(
             "Logged in as: " + currentUser.email!,
             style: TextStyle(color: Colors.grey),

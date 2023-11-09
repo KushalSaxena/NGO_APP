@@ -12,6 +12,7 @@ class Post extends StatefulWidget {
   final String time;
   final String postId;
   final List<String> likes;
+  final String? imageUrl;
   final Key? key;
 
   const Post({
@@ -21,6 +22,8 @@ class Post extends StatefulWidget {
     required this.postId,
     required this.likes,
     required this.time,
+    this.imageUrl,
+
   });
 
   @override
@@ -30,7 +33,6 @@ class Post extends StatefulWidget {
 class _PostState extends State<Post> {
   final currentUser = FirebaseAuth.instance.currentUser!;
   bool isLiked = false;
-
   final _commentTextController = TextEditingController();
 
   @override
@@ -176,6 +178,15 @@ class _PostState extends State<Post> {
           ),
 
           SizedBox(height: 20),
+          if (widget.imageUrl != null)
+            Center(
+              child: Image.network(
+                widget.imageUrl!,
+                fit: BoxFit.cover,
+                height: 200,
+                width: 200,
+              ),
+            ),
 
           StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance

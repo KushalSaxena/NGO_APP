@@ -19,7 +19,7 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final currentUser = FirebaseAuth.instance.currentUser!;
-  final userCollection = FirebaseFirestore.instance.collection('Users');
+  final userCollection = FirebaseFirestore.instance.collection('UsersProfile');
   File? _profileImage;
 
   Future<void> _pickImage() async {
@@ -185,7 +185,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
-            .collection("Users")
+            .collection("UsersProfile")
             .doc(currentUser.email)
             .snapshots(),
         builder:

@@ -1,64 +1,97 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:major_ngo_app/profile_page.dart';
 
-class SearchScreen extends StatefulWidget {
+import 'chat_page.dart';
+
+class Search extends StatefulWidget {
+  const Search({super.key});
+
   @override
-  _SearchScreenState createState() => _SearchScreenState();
+  State<Search> createState() => _SearchState();
 }
 
-class _SearchScreenState extends State<SearchScreen> {
-  final TextEditingController _searchController = TextEditingController();
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  QuerySnapshot<Map<String, dynamic>>? _searchResults;
+class _SearchState extends State<Search> {
+  Map<String, dynamic>? userMap; // Make userMap nullable
 
-  void _performSearch(String query) async {
-    if (query.isNotEmpty) {
-      QuerySnapshot<Map<String, dynamic>> searchResults = await _firestore
-          .collection("Users")
-          .where("displayName", isGreaterThanOrEqualTo: query)
-          .get();
+  bool isLoading = false;
+  final TextEditingController _search = TextEditingController();
 
+  void onSearch() async {
+    FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+    setState(() {
+      isLoading = true;
+      userMap = null; // Reset userMap before searching
+    });
+
+    final querySnapshot = await _firestore
+        .collection('Users')
+        .where('email', isEqualTo: _search.text)
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
       setState(() {
-        _searchResults = searchResults;
+        userMap = querySnapshot.docs[0].data();
+        isLoading = false;
       });
+      print(userMap);
     } else {
       setState(() {
-        _searchResults = null;
+        isLoading = false;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
         title: Text('User Search'),
       ),
-      body: Column(
+      body: isLoading
+          ? Center(
+        child: Container(
+          height: size.height / 20,
+          width: size.width / 20,
+          child: CircularProgressIndicator(),
+        ),
+      )
+          : Column(
         children: [
-          Padding(
-            padding: EdgeInsets.all(10.0),
-            child: TextField(
-              controller: _searchController,
-              onChanged: _performSearch,
-              decoration: InputDecoration(
-                labelText: 'Search Users',
-                border: OutlineInputBorder(),
+          SizedBox(height: size.height / 20),
+          Container(
+            height: size.height / 14,
+            width: size.width,
+            alignment: Alignment.center,
+            child: Container(
+              height: size.height / 14,
+              width: size.width / 1.15,
+              child: TextField(
+                controller: _search,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
               ),
             ),
           ),
-          _searchResults != null
-              ? Expanded(
-            child: ListView(
-              children: _searchResults!.docs
-                  .map((doc) => ListTile(
-                title: Text(doc["displayName"]),
-                subtitle: Text(doc["email"]),
-              ))
-                  .toList(),
+          SizedBox(height: size.height / 50),
+          ElevatedButton(onPressed: onSearch, child: Text('Search')),
+          if (userMap != null)
+            ListTile(
+              onTap: () {
+                // Handle the tap on the search result here
+                Navigator.of(context).push
+                  (MaterialPageRoute(
+                  builder: (context)=>ProfilePage(),
+                ));
+              },
+              title: Text(userMap!['email']),
             ),
-          )
-              : Container(),
         ],
       ),
     );
