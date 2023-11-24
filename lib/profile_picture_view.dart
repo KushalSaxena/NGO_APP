@@ -14,10 +14,12 @@ class ProfilePictureViewPage extends StatelessWidget {
       body: Center(
         child: Hero(
           tag: 'profileImage',
-          child: Image.network(
+          child: imageUrl.isNotEmpty
+              ? Image.network(
             imageUrl,
             fit: BoxFit.cover,
-          ),
+          )
+              : Placeholder(), // or any other widget to indicate no image
         ),
       ),
     );

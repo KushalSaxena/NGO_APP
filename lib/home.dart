@@ -1,6 +1,6 @@
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:major_ngo_app/PostOpportunityPage.dart';
 import 'package:major_ngo_app/Volunteer_Opportunities.dart';
 import 'package:major_ngo_app/chat.dart';
@@ -24,6 +24,7 @@ class _HomeState extends State<Home> {
   final currentUser = FirebaseAuth.instance.currentUser!;
   final textController = TextEditingController();
   File? _selectedImage;
+
   void postMessage() async {
     if (textController.text.isNotEmpty || _selectedImage != null) {
       String? imageUrl;
@@ -45,6 +46,7 @@ class _HomeState extends State<Home> {
       });
     }
   }
+
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
@@ -55,8 +57,10 @@ class _HomeState extends State<Home> {
       });
     }
   }
+
   Future<String?> _uploadImage(File image) async {
-    final fileName = "${currentUser.email!}_${DateTime.now().millisecondsSinceEpoch}_post_image";
+    final fileName =
+        "${currentUser.email}_${DateTime.now().millisecondsSinceEpoch}_post_image";
     final ref = firebase_storage.FirebaseStorage.instance
         .ref()
         .child('post_images/$fileName.jpg');
@@ -66,6 +70,35 @@ class _HomeState extends State<Home> {
     return downloadUrl;
   }
 
+  void showLogoutConfirmationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Logout"),
+        content: Text("Are you sure you want to logout?"),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close the dialog
+            },
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              // Perform logout and navigate to the login page
+              await FirebaseAuth.instance.signOut();
+              Navigator.pop(context); // Close the dialog
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => LoginPage()),
+              );
+            },
+            child: Text('Logout'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -94,7 +127,6 @@ class _HomeState extends State<Home> {
               leading: Icon(Icons.person),
               title: Text('Profile'),
               onTap: () {
-                // Navigate to about page
                 Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => ProfilePage(),
                 ));
@@ -104,64 +136,52 @@ class _HomeState extends State<Home> {
               leading: Icon(Icons.chat),
               title: Text('Chat with User'),
               onTap: () {
-
                 Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => Chat(),
                 ));
               },
-
-            ),ListTile(
-      leading: Icon(Icons.chat),
-      title: Text(' VolunteerOpportunities'),
-      onTap: () {
-
-        Navigator.of(context).push(MaterialPageRoute(
-          builder: (context) => VolunteerOpportunities(),
-        ));
-      },
+            ),
+            ListTile(
+              leading: Icon(Icons.chat),
+              title: Text(' VolunteerOpportunities'),
+              onTap: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => VolunteerOpportunities(),
+                ));
+              },
             ),
             ListTile(
               leading: Icon(Icons.chat),
               title: Text('Search'),
               onTap: () {
-                // Navigate to about page
                 Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => Search(),
                 ));
               },
-
             ),
             ListTile(
               leading: Icon(Icons.chat),
               title: Text('PostOpportunityPage'),
               onTap: () {
-                // Navigate to about page
                 Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => PostOpportunityPage(),
                 ));
               },
-
             ),
             ListTile(
               leading: Icon(Icons.info),
               title: Text('About'),
               onTap: () {
-                // Navigate to about page
                 Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => AboutPage(),
                 ));
               },
-
             ),
-
             ListTile(
               leading: Icon(Icons.logout),
               title: Text('Logout'),
-              onTap: () async {
-                await FirebaseAuth.instance.signOut();
-                Navigator.of(context).pushReplacement(MaterialPageRoute(
-                  builder: (context) => LoginPage(),
-                ));
+              onTap: () {
+                showLogoutConfirmationDialog(context);
               },
             ),
           ],
@@ -187,7 +207,7 @@ class _HomeState extends State<Home> {
                         postId: post.id,
                         likes: List<String>.from(post['Likes'] ?? []),
                         time: formatDate(post["TimeStamp"]),
-                        imageUrl: post['ImageURL'], // Pass the image URL
+                        imageUrl: post['ImageURL'],
                       );
                     },
                   );

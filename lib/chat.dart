@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'chat_page.dart';
 
 class Chat extends StatefulWidget {
-  const Chat({super.key});
+  const Chat({Key? key}) : super(key: key);
 
   @override
   _ChatState createState() => _ChatState();
@@ -30,12 +30,18 @@ class _ChatState extends State<Chat> {
           return const Text("Error");
         }
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Text("Loading");
+          return const Center(child: CircularProgressIndicator());
         }
-        return ListView(
-          children: snapshot.data!.docs
-              .map<Widget>((doc) => _buildUserListItem(doc))
-              .toList(),
+        var users = snapshot.data!.docs
+            .where((doc) =>
+        _auth.currentUser!.email != (doc.data() as Map)['email'])
+            .toList();
+
+        return ListView.builder(
+          itemCount: users.length,
+          itemBuilder: (context, index) {
+            return _buildUserListItem(users[index]);
+          },
         );
       },
     );
@@ -43,24 +49,25 @@ class _ChatState extends State<Chat> {
 
   Widget _buildUserListItem(DocumentSnapshot document) {
     Map<String, dynamic> data = document.data()! as Map<String, dynamic>;
-    // Display all the users except the current user
-    if (_auth.currentUser!.email != data['email']) {
-      return ListTile(
-        title: Text(data['email']),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ChatPage(
-                receiverUserEmail: data['email'],
-                receiverUserId: data['uid'],
-              ),
+
+    return ListTile(
+      leading: CircleAvatar(
+        // You can use an image here if you have one, or use the first letter of the user's name as an avatar.
+        child: Text(data['email'][0].toUpperCase()),
+      ),
+      title: Text(data['email']),
+      subtitle: Text("Online"), // Add online status or other information if available.
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChatPage(
+              receiverUserEmail: data['email'],
+              receiverUserId: data['uid'],
             ),
-          );
-        },
-      );
-    } else {
-      return Container();
-    }
+          ),
+        );
+      },
+    );
   }
 }

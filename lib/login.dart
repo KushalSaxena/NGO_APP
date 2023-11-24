@@ -89,26 +89,12 @@ class _LoginPageState extends State<LoginPage> {
                 SizedBox(height: 6.0),
                 Column(
                   children: [
-                    Text(
-                      "Cause",
-                      style: TextStyle(
-                        fontSize: 35,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Text(
-                      "Connect",
-                      style: TextStyle(
-                        fontSize: 35,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
+
+
                     SizedBox(height: 0.0),
                     Image.asset(
-                      "assets/logo.png",
-                      width: 200,
+                      "assets/xyz_abc.png",
+                      width: 350,
                     ),
                   ],
                 ),

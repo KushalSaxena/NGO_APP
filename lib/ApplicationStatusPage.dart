@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class ApplicationStatusPage extends StatelessWidget {
-  final User currentUser = FirebaseAuth.instance.currentUser!;
+class ApplicationStatusPage extends StatefulWidget {
+  @override
+  _ApplicationStatusPageState createState() => _ApplicationStatusPageState();
+}
+
+class _ApplicationStatusPageState extends State<ApplicationStatusPage> {
+  final currentUser = FirebaseAuth.instance.currentUser!;
 
   @override
   Widget build(BuildContext context) {
@@ -12,34 +17,30 @@ class ApplicationStatusPage extends StatelessWidget {
         title: Text("Application Status"),
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection("VolunteerApplications")
-            .where('userId', isEqualTo: currentUser.uid)
-            .snapshots(),
+        stream: FirebaseFirestore.instance.collection("Applications").where('ApplicantEmail', isEqualTo: currentUser.email).snapshots(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (!snapshot.hasData) {
             return Center(
               child: CircularProgressIndicator(),
             );
           }
-          if (snapshot.hasError) {
-            return Center(
-              child: Text('Error: ${snapshot.error}'),
-            );
-          }
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(
-              child: Text('You have no applications.'),
-            );
-          }
+
+          var applications = snapshot.data!.docs;
+
           return ListView.builder(
-            itemCount: snapshot.data!.docs.length,
+            itemCount: applications.length,
             itemBuilder: (context, index) {
-              final application = snapshot.data!.docs[index];
-              return Card(
-                margin: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                child: ListTile(
-                  title: Text('Opportunity ID: ${application['opportunityId']}'),
-                  subtitle: Text('Status: ${_getStatusText(application['status'])}'),
+              var application = applications[index];
+              var applicationData = application.data() as Map<String, dynamic>;
+
+              return ListTile(
+                title: Text("Opportunity: ${applicationData['OpportunityId']}"),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Status: ${applicationData['Status']}"),
+                    Text("Applied on: ${formatDate(applicationData['TimeStamp'].toDate())}"),
+                  ],
                 ),
               );
             },
@@ -49,16 +50,7 @@ class ApplicationStatusPage extends StatelessWidget {
     );
   }
 
-  String _getStatusText(String status) {
-    switch (status) {
-      case 'pending':
-        return 'Pending';
-      case 'approved':
-        return 'Approved';
-      case 'rejected':
-        return 'Rejected';
-      default:
-        return 'Unknown';
-    }
+  String formatDate(DateTime dateTime) {
+    return "${dateTime.day}-${dateTime.month}-${dateTime.year}";
   }
 }

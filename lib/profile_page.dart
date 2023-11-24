@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:major_ngo_app/text_box.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'dart:io';
@@ -9,6 +8,7 @@ import 'ApplicationStatusPage.dart';
 import 'ManageApplicationsPage.dart';
 import 'home.dart';
 import 'login.dart';
+import 'text_box.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
@@ -32,6 +32,7 @@ class _ProfilePageState extends State<ProfilePage> {
       });
     }
   }
+
   Future<void> removeImage() async {
     setState(() {
       _profileImage = null;
@@ -50,7 +51,9 @@ class _ProfilePageState extends State<ProfilePage> {
       final downloadUrl = await ref.getDownloadURL();
 
       // Save the download URL in Firestore
-      await userCollection.doc(currentUser.email).update({'profileImage': downloadUrl});
+      await userCollection
+          .doc(currentUser.email)
+          .update({'profileImage': downloadUrl});
 
       return downloadUrl;
     } else {
@@ -123,6 +126,36 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  void showLogoutConfirmationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Logout"),
+        content: Text("Are you sure you want to logout?"),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close the dialog
+            },
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              // Perform logout and navigate to the login page
+              FirebaseAuth.instance.signOut();
+              Navigator.pop(context); // Close the dialog
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => LoginPage()),
+              );
+            },
+            child: Text('Logout'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -161,10 +194,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ManageApplicationsPage(
-                      opportunityId: '1234',
-                      opportunityName: 'Volunteer Opportunity',
-                    ),
+                    builder: (context) => ManageApplicationsPage(),
                   ),
                 );
               },
@@ -172,12 +202,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ListTile(
               title: Text('Logout'),
               onTap: () {
-                FirebaseAuth.instance.signOut();
-                Navigator.pop(context);
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginPage()),
-                );
+                showLogoutConfirmationDialog(context);
               },
             ),
           ],
@@ -193,6 +218,7 @@ class _ProfilePageState extends State<ProfilePage> {
           if (snapshot.hasData) {
             final userData = snapshot.data!.data() as Map<String, dynamic>;
             final profileImageUrl = userData['profileImage'];
+            final userType = userData['userType'];
 
             return ListView(
               children: [
@@ -222,20 +248,20 @@ class _ProfilePageState extends State<ProfilePage> {
                                 viewProfileImage();
                               },
                             ),
-                             ListTile(
-                                leading: Icon(Icons.delete),
-                                title: Text('Remove'),
-                                onTap: () {
+                            ListTile(
+                              leading: Icon(Icons.delete),
+                              title: Text('Remove'),
+                              onTap: () {
                                 Navigator.pop(context);
                                 removeImage();
-                          }
-                             )
+                              },
+                            )
                           ],
                         ),
                       ),
                     );
                   },
-                  child:   profileImageUrl.isNotEmpty
+                  child: profileImageUrl.isNotEmpty
                       ? CircleAvatar(
                     radius: 100,
                     backgroundImage: NetworkImage(profileImageUrl),
@@ -252,6 +278,12 @@ class _ProfilePageState extends State<ProfilePage> {
                   style: TextStyle(color: Colors.grey[700]),
                 ),
                 SizedBox(height: 50),
+                Text(
+                  userType == 'NGO' ? 'NGO' : 'User',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey[700]),
+                ),
+                SizedBox(height: 50),
                 Padding(
                   padding: const EdgeInsets.only(left: 25.0),
                   child: Text(
@@ -260,11 +292,9 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
                 MyTextBox(
-
                   text: userData['username'],
                   sectionName: 'username',
                   onPressed: () => editField('username'),
-
                 ),
                 MyTextBox(
                   text: userData['bio'],
@@ -304,9 +334,6 @@ class FullScreenImageView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Profile Picture'),
-      ),
       body: Center(
         child: Image.file(image),
       ),

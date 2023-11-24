@@ -15,7 +15,10 @@ class _SignupPageState extends State<SignupPage> {
   bool _obscureText = true;
   TextEditingController _emailController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
+  TextEditingController _confirmPasswordController = TextEditingController();
   TextEditingController _userNameController = TextEditingController();
+
+  String _selectedUserType = 'User'; // Default user type
 
   Future<void> _togglePasswordVisibility() async {
     setState(() {
@@ -26,13 +29,23 @@ class _SignupPageState extends State<SignupPage> {
   Future<void> _handleSignup() async {
     final email = _emailController.text;
     final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
     final username = _userNameController.text;
 
     if (password.length < 6) {
-      // Display an error message for a password that's too short
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Password should be at least 6 characters long."),
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Passwords do not match. Please enter the same password."),
           duration: Duration(seconds: 3),
         ),
       );
@@ -45,22 +58,20 @@ class _SignupPageState extends State<SignupPage> {
         password: password,
       );
       final uid = userCredential.user?.uid;
-      // Store user's email and UID in Firestore collection 'Users'
+
       _firestore.collection("Users").doc(userCredential.user!.uid).set({
         'email': email,
-        'uid' : uid,
+        'uid': uid,
       });
 
-      // Create user profile in another Firestore collection
       await _firestore.collection("UsersProfile").doc(userCredential.user!.email!).set({
         'username': username,
+        'userType': _selectedUserType, // Added user type
         'bio': 'Empty bio...',
-        'profileImage': defaultProfileImageUrl, // Set default profile image URL
+        'profileImage': defaultProfileImageUrl,
       });
 
-
       if (userCredential.user != null) {
-        // Signup successful, navigate to the login page
         Navigator.of(context).pushReplacement(MaterialPageRoute(
           builder: (context) => LoginPage(),
         ));
@@ -68,7 +79,6 @@ class _SignupPageState extends State<SignupPage> {
     } catch (e) {
       if (e is FirebaseAuthException) {
         if (e.code == 'email-already-in-use') {
-          // Handle the case where the email is already in use
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text("The email is already in use. Please try another."),
@@ -76,7 +86,6 @@ class _SignupPageState extends State<SignupPage> {
             ),
           );
         } else if (e.code == 'invalid-email') {
-          // Handle invalid email
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text("Invalid email format. Please enter a valid email."),
@@ -84,7 +93,6 @@ class _SignupPageState extends State<SignupPage> {
             ),
           );
         } else {
-          // Handle other signup errors
           print("Signup Error: $e");
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -121,26 +129,10 @@ class _SignupPageState extends State<SignupPage> {
                   SizedBox(height: 10.0),
                   Column(
                     children: [
-                      Text(
-                        "Cause",
-                        style: TextStyle(
-                          fontSize: 35,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        "Connect",
-                        style: TextStyle(
-                          fontSize: 35,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
                       SizedBox(height: 1.0),
                       Image.asset(
-                        "assets/logo.png",
-                        width: 200,
+                        "assets/xyz_abc.png",
+                        width: 350,
                       ),
                     ],
                   ),
@@ -174,14 +166,51 @@ class _SignupPageState extends State<SignupPage> {
                         icon: Icon(Icons.lock),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscureText
-                                ? Icons.visibility
-                                : Icons.visibility_off,
+                            _obscureText ? Icons.visibility : Icons.visibility_off,
                           ),
                           onPressed: _togglePasswordVisibility,
                         ),
                       ),
                       obscureText: _obscureText,
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: TextFormField(
+                      controller: _confirmPasswordController,
+                      decoration: InputDecoration(
+                        hintText: "Confirm Password",
+                        icon: Icon(Icons.lock),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscureText ? Icons.visibility : Icons.visibility_off,
+                          ),
+                          onPressed: _togglePasswordVisibility,
+                        ),
+                      ),
+                      obscureText: _obscureText,
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: DropdownButtonFormField<String>(
+                      value: _selectedUserType,
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          _selectedUserType = newValue!;
+                        });
+                      },
+                      items: <String>['User', 'NGO']
+                          .map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                      decoration: InputDecoration(
+                        hintText: "User Type",
+                        icon: Icon(Icons.person),
+                      ),
                     ),
                   ),
                   ElevatedButton(
@@ -213,4 +242,5 @@ class _SignupPageState extends State<SignupPage> {
   }
 }
 
-const String defaultProfileImageUrl = 'https://thepluginpeople.atlassian.net/wiki/aa-avatar/557058:3fbe1a47-28ff-4ca5-a1fc-60f24c53b89d';
+const String defaultProfileImageUrl =
+    'https://thepluginpeople.atlassian.net/wiki/aa-avatar/557058:3fbe1a47-28ff-4ca5-a1fc-60f24c53b89d';

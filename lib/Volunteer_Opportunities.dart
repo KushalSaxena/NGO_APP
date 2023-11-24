@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'ManageApplicationsPage.dart';
+class VolunteerOpportunities extends StatefulWidget {
+  @override
+  _VolunteerOpportunitiesState createState() => _VolunteerOpportunitiesState();
+}
 
-class VolunteerOpportunities extends StatelessWidget {
-  final User currentUser = FirebaseAuth.instance.currentUser!;
+class _VolunteerOpportunitiesState extends State<VolunteerOpportunities> {
+  final currentUser = FirebaseAuth.instance.currentUser!;
 
   @override
   Widget build(BuildContext context) {
@@ -14,45 +17,44 @@ class VolunteerOpportunities extends StatelessWidget {
         title: Text("Volunteer Opportunities"),
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection("VolunteerOpportunities")
-            .snapshots(),
+        stream: FirebaseFirestore.instance.collection("Opportunities").snapshots(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (!snapshot.hasData) {
             return Center(
               child: CircularProgressIndicator(),
             );
           }
-          if (snapshot.hasError) {
-            return Center(
-              child: Text('Error: ${snapshot.error}'),
-            );
-          }
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(
-              child: Text('No volunteer opportunities available.'),
-            );
-          }
+
+          var opportunities = snapshot.data!.docs;
+
           return ListView.builder(
-            itemCount: snapshot.data!.docs.length,
+            itemCount: opportunities.length,
             itemBuilder: (context, index) {
-              final opportunity = snapshot.data!.docs[index];
+              var opportunity = opportunities[index];
+              var opportunityData = opportunity.data() as Map<String, dynamic>;
+
               return ListTile(
-                title: Text(opportunity['name']),
-                subtitle: Text(opportunity['description']),
-                trailing: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ManageApplicationsPage(
-                          opportunityId: opportunity.id,
-                          opportunityName: opportunity['name'],
-                        ),
-                      ),
+                title: Text(opportunityData['OpportunityName']),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(opportunityData['OpportunityDescription']),
+                    Text("Posted by: ${opportunityData['UserEmail']}"),
+                    Text("Posted on: ${formatDate(opportunityData['TimeStamp'].toDate())}"),
+                  ],
+                ),
+                trailing: FutureBuilder<bool>(
+                  future: checkIfAlreadyApplied(opportunity.id),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return CircularProgressIndicator();
+                    }
+
+                    return ElevatedButton(
+                      onPressed: snapshot.data! ? null : () => applyToOpportunity(opportunity.id, opportunityData['UserEmail']),
+                      child: Text(snapshot.data! ? "Already Applied" : "Apply"),
                     );
                   },
-                  child: Text("Apply"),
                 ),
               );
             },
@@ -61,8 +63,36 @@ class VolunteerOpportunities extends StatelessWidget {
       ),
     );
   }
-}
 
-void main() => runApp(MaterialApp(
-  home: VolunteerOpportunities(),
-));
+  Future<bool> checkIfAlreadyApplied(String opportunityId) async {
+    var applicationQuery = await FirebaseFirestore.instance
+        .collection("Applications")
+        .where('OpportunityId', isEqualTo: opportunityId)
+        .where('ApplicantEmail', isEqualTo: currentUser.email)
+        .get();
+
+    return applicationQuery.docs.isNotEmpty;
+  }
+
+  void applyToOpportunity(String opportunityId, String opportunityOwnerEmail) async {
+    // Add logic to store application data in Firestore
+    await FirebaseFirestore.instance.collection("Applications").add({
+      'OpportunityId': opportunityId,
+      'ApplicantEmail': currentUser.email,
+      'OpportunityOwnerEmail': opportunityOwnerEmail,
+      'Status': 'Pending', // You can set an initial status or handle it dynamically
+      'TimeStamp': Timestamp.now(),
+    });
+
+    // Optionally, you can provide feedback to the user after applying.
+
+    // You might also want to update the UI to reflect the application status.
+    setState(() {
+      // Trigger a rebuild to update the button text
+    });
+  }
+
+  String formatDate(DateTime dateTime) {
+    return "${dateTime.day}-${dateTime.month}-${dateTime.year}";
+  }
+}

@@ -2,67 +2,80 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class PostOpportunityPage extends StatelessWidget {
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController descriptionController = TextEditingController();
+class PostOpportunityPage extends StatefulWidget {
+  @override
+  _PostOpportunityPageState createState() => _PostOpportunityPageState();
+}
 
-  final User currentUser = FirebaseAuth.instance.currentUser!;
+class _PostOpportunityPageState extends State<PostOpportunityPage> {
+  final currentUser = FirebaseAuth.instance.currentUser!;
+  final _opportunityNameController = TextEditingController();
+  final _opportunityDescriptionController = TextEditingController();
 
-  void _postOpportunity(BuildContext context) async {
-    String name = nameController.text;
-    String description = descriptionController.text;
+  void postOpportunity(BuildContext context) async {
+    String opportunityName = _opportunityNameController.text.trim();
+    String opportunityDescription = _opportunityDescriptionController.text.trim();
 
-    if (name.isEmpty || description.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Please fill in all fields."),
-          duration: Duration(seconds: 3),
-        ),
+    if (opportunityName.isNotEmpty && opportunityDescription.isNotEmpty) {
+      FirebaseFirestore.instance.collection("Opportunities").add({
+        'OpportunityName': opportunityName,
+        'OpportunityDescription': opportunityDescription,
+        'UserEmail': currentUser.email,
+        'TimeStamp': Timestamp.now(),
+      });
+
+      _opportunityNameController.clear();
+      _opportunityDescriptionController.clear();
+
+      // Show a success dialog
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("Success"),
+            content: Text("Opportunity successfully posted!"),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close the dialog
+                },
+                child: Text("OK"),
+              ),
+            ],
+          );
+        },
       );
-      return;
     }
-
-    await FirebaseFirestore.instance.collection("VolunteerOpportunities").add({
-      'name': name,
-      'description': description,
-      // Add any additional fields you may need
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Opportunity posted successfully!"),
-        duration: Duration(seconds: 3),
-      ),
-    );
-
-    // Clear the text fields after posting
-    nameController.clear();
-    descriptionController.clear();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Post Volunteer Opportunity"),
+        title: Text("Post Opportunity"),
       ),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextField(
-              controller: nameController,
-              decoration: InputDecoration(labelText: "Opportunity Name"),
+              controller: _opportunityNameController,
+              decoration: InputDecoration(
+                labelText: 'Opportunity Name',
+              ),
             ),
-            SizedBox(height: 10),
+            SizedBox(height: 16),
             TextField(
-              controller: descriptionController,
-              decoration: InputDecoration(labelText: "Description"),
-              maxLines: 3,
+              controller: _opportunityDescriptionController,
+              maxLines: 4,
+              decoration: InputDecoration(
+                labelText: 'Opportunity Description',
+              ),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => _postOpportunity(context),
+              onPressed: () => postOpportunity(context),
               child: Text("Post Opportunity"),
             ),
           ],
